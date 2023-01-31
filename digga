@@ -1,0 +1,42 @@
+#!/bin/bash
+
+TLD=$1
+#SUBDOMAINS="live live2 staging staging2 www"
+SUBDOMAINS="live staging www"
+
+echo dig A ${TLD}
+dig A +short ${TLD}
+echo -----
+
+echo dig AAAA ${TLD}
+dig AAAA +short ${TLD}
+echo -----
+    
+echo checking SSL of ${TLD}
+if true | openssl s_client -connect ${TLD}:443 2>/dev/null | openssl x509 -noout -checkend 0; then
+  echo "Certificate is not expired"
+else
+  echo "Certificate is expired"
+fi
+
+echo -----------------------
+
+for SUBDOMAIN in ${SUBDOMAINS}; do
+	echo dig A ${SUBDOMAIN}.${TLD}
+	dig A +short ${SUBDOMAIN}.${TLD}
+	echo -----
+
+	echo dig AAAA ${SUBDOMAIN}.${TLD}
+	dig AAAA +short ${SUBDOMAIN}.${TLD}
+    echo -----
+
+    echo checking SSL of ${SUBDOMAIN}.${TLD}
+	if true | openssl s_client -connect ${SUBDOMAIN}.${TLD}:443 2>/dev/null | \
+	  openssl x509 -noout -checkend 0; then
+	  echo "Certificate is not expired"
+	else
+	  echo "Certificate is expired"
+	fi
+    
+    echo -----------------------
+done
